@@ -49,7 +49,7 @@ const Features = () => {
           </h2>
           <p className="mt-4 text-lg text-gray-600">
             Our truck bed signs are engineered for durability, visibility, and
-            ease of use. Here's what sets us apart.
+            ease of use. Here&apos;s what sets us apart.
           </p>
         </div>
 

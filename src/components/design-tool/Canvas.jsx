@@ -1,6 +1,5 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import * as fabric from 'fabric';
-import { SIGN_SIZES } from '../../utils/constants';
 
 const Canvas = ({
   selectedSize,

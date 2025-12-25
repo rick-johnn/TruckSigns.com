@@ -47,7 +47,7 @@ export const getCurrentUser = () => {
 export const setCurrentUser = (user) => {
   if (user) {
     // Don't store password in session
-    const { password, ...safeUser } = user;
+    const { password: _password, ...safeUser } = user;
     localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(safeUser));
   } else {
     localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);

@@ -19,7 +19,7 @@ const CallToAction = () => {
           </h2>
           <p className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
             Join hundreds of businesses who are advertising their services every
-            mile they drive. Start designing your sign today — it's completely free.
+            mile they drive. Start designing your sign today — it&apos;s completely free.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">

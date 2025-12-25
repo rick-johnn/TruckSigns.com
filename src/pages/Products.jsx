@@ -128,7 +128,7 @@ const Products = () => {
                     <li className="flex items-start">
                       <Check className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
                       <span className="text-gray-700">
-                        {size.width}" wide x {size.height}" tall
+                        {size.width}&quot; wide x {size.height}&quot; tall
                       </span>
                     </li>
                     <li className="flex items-start">

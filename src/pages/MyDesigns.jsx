@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Layout } from '../components/layout';
 import { Button, Modal } from '../components/ui';
 import { InquiryModal } from '../components/design-tool';
@@ -193,7 +193,7 @@ const MyDesigns = () => {
       >
         <div className="space-y-4">
           <p className="text-gray-600">
-            Are you sure you want to delete "{designToDelete?.name}"? This action
+            Are you sure you want to delete &quot;{designToDelete?.name}&quot;? This action
             cannot be undone.
           </p>
           <div className="flex justify-end gap-3">

@@ -86,7 +86,7 @@ const About = () => {
               About <span className="text-usa-red">TruckSigns.com</span>
             </h1>
             <p className="text-xl text-gray-300">
-              We're passionate about helping businesses stand out on the road.
+              We&apos;re passionate about helping businesses stand out on the road.
               Our custom truck bed signs turn every mile into advertising.
             </p>
           </div>
@@ -253,7 +253,7 @@ const About = () => {
                       Message Sent!
                     </h4>
                     <p className="text-gray-600">
-                      Thank you for reaching out. We'll get back to you soon.
+                      Thank you for reaching out. We&apos;ll get back to you soon.
                     </p>
                     <Button
                       variant="secondary"

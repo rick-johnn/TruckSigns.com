@@ -14,7 +14,6 @@ import {
   InquiryModal,
   SaveDesignModal,
 } from '../components/design-tool';
-import { useAuth } from '../context/AuthContext';
 import { useDesign } from '../context/DesignContext';
 import { SIGN_SIZES } from '../utils/constants';
 import { Save, Send, FolderOpen } from 'lucide-react';
@@ -23,7 +22,6 @@ const DesignTool = () => {
   const [searchParams] = useSearchParams();
   const designId = searchParams.get('id');
 
-  const { user } = useAuth();
   const {
     currentDesign,
     selectedSize,

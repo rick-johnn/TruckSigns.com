@@ -12,7 +12,6 @@ import {
   ArrowDown,
   RotateCcw,
 } from 'lucide-react';
-import { Button } from '../ui';
 
 const Toolbar = ({
   onAddImage,

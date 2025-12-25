@@ -15,7 +15,7 @@ const ProductPreview = () => {
           </h2>
           <p className="mt-4 text-lg text-gray-600">
             We offer three standard sizes to fit the most popular truck beds.
-            All signs are 24" tall for maximum visibility.
+            All signs are 24&quot; tall for maximum visibility.
           </p>
         </div>
 
