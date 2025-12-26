@@ -12,7 +12,11 @@
       "Bash(npm view:*)",
       "Bash(npm search:*)",
       "Bash(npm run lint:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(docker compose build:*)",
+      "Bash(docker compose:*)",
+      "Bash(docker ps:*)",
+      "Bash(curl:*)"
     ]
   }
 }
