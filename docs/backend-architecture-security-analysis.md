@@ -2,381 +2,541 @@
 
 ## Executive Summary
 
-This document provides a comprehensive architectural analysis for TruckSigns.com, evaluating whether a backend is necessary and recommending the appropriate security posture for a public-facing design tool on Azure.
+TruckSigns.com is a React-based design tool for creating custom truck bed signs. This document defines the production architecture for a **minimal, secure, cost-predictable backend** deployed on Azure.
 
-**Bottom Line Up Front:** The current frontend-only architecture has critical security flaws that make it unsuitable for production with real user accounts. However, a full backend is not strictly necessary. A **hybrid approach** using Azure serverless functions for authentication and email, combined with client-side design storage, provides the optimal balance of security, simplicity, and cost.
+**Key Architectural Decisions:**
 
-### Confirmed Requirements
+- **Hosting**: React SPA deployed as a container on Azure Container Apps (consumption tier)
+- **Backend**: Minimal stateless API handling authentication, authorization, email proxy, and design persistence
+- **Database**: Azure SQL Database (serverless) as the single system of record
+- **Authentication**: JWT-based, password authentication with bcrypt hashing
+- **Design Storage**: Server-side persistence in Azure SQL, enabling multi-device access
 
-- **Authentication**: Password-based (email + password with server-side hashing)
-- **Design Storage**: Browser-only (localStorage) - no cloud sync required
-- **Budget**: Minimize cost ($0-10/month target)
+**Why This Architecture:**
 
----
+The requirement for users to access designs from multiple computers eliminates browser-only storage as an option. Azure SQL was chosen over Cosmos DB for cost predictability, operational familiarity, and transactional guarantees. A minimal backend philosophy ensures low operational burden while meeting all functional requirements.
 
-## 1. Current State Assessment
-
-### What Exists Today
-
-| Component | Implementation | Location |
-|-----------|----------------|----------|
-| User Authentication | localStorage with plain-text passwords | `src/utils/storage.js` |
-| User Data | Email, password, name, phone, company | `trucksigns_users` localStorage key |
-| Design Storage | Fabric.js JSON + PNG preview | `trucksigns_designs` localStorage key |
-| Email Sending | EmailJS (client-side) | `src/utils/emailService.js` |
-| Session Management | localStorage token (no expiry) | `trucksigns_current_user` key |
-
-### Critical Security Issues (Current State)
-
-1. **Plain-text password storage** (`storage.js:35`) - Passwords compared directly without hashing
-2. **Client-side authentication** - Any user can inspect/modify localStorage to impersonate others
-3. **No access control enforcement** - Design ownership is email-based but trivially bypassable
-4. **Exposed EmailJS credentials** - Public key visible in client bundle
-5. **No rate limiting** - Unlimited login attempts, email sends
-6. **XSS vulnerability** - localStorage accessible to any script on the page
+**Estimated Monthly Cost:** $5-15 for small usage, scaling predictably with growth.
 
 ---
 
-## 2. Threat Model and Risk Assessment
+## 1. Design Data Analysis
 
-### Data at Risk
+### 1.1 Design Data Characteristics
 
-| Data Type | Sensitivity | Current Exposure | Breach Impact |
-|-----------|-------------|------------------|---------------|
-| Email addresses | Low-Medium | High (localStorage, client-visible) | Spam, phishing lists |
-| Passwords | High | Critical (plain text in localStorage) | Credential stuffing, account takeover |
-| Phone numbers | Medium | High (localStorage) | Spam calls, social engineering |
-| Company names | Low | Medium | Competitive intelligence |
-| Design artifacts | Low-Medium | Medium (localStorage) | IP theft, design copying |
+A design in TruckSigns.com consists of:
 
-### Threat Vectors
+| Component | Description | Typical Size |
+|-----------|-------------|--------------|
+| Fabric.js JSON | Canvas state (objects, positions, styles) | 5-50 KB |
+| Metadata | Name, size, timestamps, user reference | < 1 KB |
+| Preview Image | PNG data URL (base64 encoded) | 50-200 KB |
 
-#### Without Backend (Current)
+**Total per design:** 60-250 KB typical, up to 500 KB for complex designs with embedded images.
 
-| Threat | Likelihood | Impact | Risk |
-|--------|------------|--------|------|
-| Password theft via XSS | High | High | **Critical** |
-| Account impersonation | High | Medium | **High** |
-| Email spam via EmailJS abuse | Medium | Medium | **Medium** |
-| Design theft by other users | Low | Low | Low |
-| localStorage data loss | Medium | Medium | Medium |
+### 1.2 Usage Pattern Estimates
 
-#### With Backend API
+| Metric | Conservative | Moderate | Growth |
+|--------|--------------|----------|--------|
+| Users | 10-50 | 100-500 | 1,000-5,000 |
+| Designs per user | 3-5 | 5-10 | 5-15 |
+| Total designs | 50-250 | 500-5,000 | 5,000-75,000 |
+| Storage (designs only) | 15-60 MB | 150 MB - 1.2 GB | 1.5-18 GB |
 
-| Threat | Likelihood | Impact | Risk |
-|--------|------------|--------|------|
-| API credential theft | Low | High | Medium |
-| SQL injection (if applicable) | Low | High | Medium |
-| Authentication bypass | Low | High | Medium |
-| Rate limit evasion | Low | Low | Low |
-| DDoS | Low | Medium | Low |
+### 1.3 Access Patterns
 
-### Risk Assessment Conclusion
+- **Read frequency**: Low (user loads design when editing)
+- **Write frequency**: Low-moderate (manual save, potential autosave every 30-60 seconds while editing)
+- **Update pattern**: Full overwrite (no delta/versioning required initially)
+- **Concurrency**: Single user per design (no collaboration)
 
-The current architecture has **unacceptable risk** for production use with real user accounts. The plain-text password storage alone is a liability concern. A backend is not required to mitigate all risks, but **some server-side component is necessary** for:
+### 1.4 Data Classification
 
-1. Password hashing and authentication
-2. Email sending (to hide API keys)
-3. Rate limiting
+| Data Type | Classification | Storage Location |
+|-----------|----------------|------------------|
+| Design JSON (canvasData) | User content, large payload | Azure SQL (NVARCHAR(MAX)) |
+| Preview image | Derived artifact, large binary | Azure SQL initially, Blob candidate later |
+| Design metadata | Structured, small | Azure SQL (normalized columns) |
+| User credentials | Sensitive | Azure SQL (password hashed) |
+| User profile | Business data | Azure SQL |
 
 ---
 
-## 3. Data Classification and Minimization
+## 2. Storage Model Evaluation
 
-### Classification
+### 2.1 Option A: All Data in Azure SQL (Recommended)
 
-| Data | Classification | Retention Requirement | Storage Recommendation |
-|------|----------------|----------------------|------------------------|
-| Email | Business Essential | Duration of account | Server-side (hashed for auth) |
-| Password | Sensitive Credential | Duration of account | Server-side (bcrypt hashed) |
-| Name/Phone/Company | Business Optional | Duration of account | Server-side or client-side |
-| Design JSON | User Content | User-controlled | Client-side (localStorage) acceptable |
-| Design Preview PNG | User Content | User-controlled | Client-side acceptable |
+**Schema:**
 
-### Minimization Recommendations
+```sql
+-- Users table
+CREATE TABLE Users (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    Email NVARCHAR(255) NOT NULL UNIQUE,
+    PasswordHash NVARCHAR(255) NOT NULL,
+    Name NVARCHAR(255) NOT NULL,
+    Phone NVARCHAR(50),
+    CompanyName NVARCHAR(255),
+    CreatedAt DATETIME2 DEFAULT GETUTCDATE(),
+    UpdatedAt DATETIME2 DEFAULT GETUTCDATE()
+);
 
-1. **Passwords**: MUST be hashed server-side. Never store or transmit in plain text.
-2. **Email**: Required for authentication. Consider magic-link auth to eliminate passwords entirely.
-3. **Phone/Company**: Optional for business purposes. Could be collected only at inquiry time, not at signup.
-4. **Designs**: Can remain client-side. Consider optional cloud backup as a feature.
-
-### What Should Never Be Stored Server-Side
-
-- Raw design canvas data (large, user-owned, no server-side need)
-- Preview images (potentially large, user-owned)
-- Browser session tokens in server database (use stateless JWTs or secure cookies)
-
----
-
-## 4. Frontend-Only Viability Assessment
-
-### Can Email Be Handled Client-Side Only?
-
-**Partially, with caveats.**
-
-| Approach | Security | Abuse Prevention | Recommendation |
-|----------|----------|------------------|----------------|
-| EmailJS (current) | Poor - API key exposed | None - unlimited sends | **Not recommended for production** |
-| Formspree/similar | Better - key hidden | Basic rate limits | Acceptable for low volume |
-| Azure Function proxy | Good - key server-side | Full control | **Recommended** |
-
-**Verdict**: Client-side email via EmailJS is acceptable for demos but not production. A minimal serverless function solves this.
-
-### Can Authentication Be Handled Client-Side Only?
-
-**No.** There is no secure way to handle password-based authentication purely client-side. Options:
-
-| Approach | Viability | Notes |
-|----------|-----------|-------|
-| localStorage passwords | **Unacceptable** | Current approach - critical flaw |
-| OAuth only (Google/Microsoft) | Viable | Eliminates password handling entirely |
-| Magic link auth | Viable | Requires server to send links |
-| Passwordless (WebAuthn) | Viable | Requires server for challenge/response |
-
-**Verdict**: Some server component is required unless using pure third-party OAuth.
-
-### Can Design Persistence Be Handled Client-Side Only?
-
-**Yes, with limitations.**
-
-| Concern | Assessment |
-|---------|------------|
-| Data durability | Low - browser clears localStorage, user switches devices |
-| Cross-device access | None - designs locked to one browser |
-| Storage limits | ~5-10MB per origin - sufficient for many designs |
-| Security | Acceptable - designs are user-owned content |
-
-**Verdict**: Client-side design storage is acceptable. Optional server-side backup is a feature enhancement, not a security requirement.
-
-### Hidden Failure Modes
-
-1. **localStorage quota exhaustion** - Large designs with embedded images could hit limits
-2. **Incognito mode** - localStorage cleared on browser close
-3. **Browser migration** - No way to transfer designs
-4. **Shared computers** - Designs visible to all users of the browser
-
-### Frontend-Only Conclusion
-
-**Frontend-only is not acceptable for the current feature set** because:
-
-1. User accounts require secure authentication
-2. Email sending requires hidden API credentials
-3. Rate limiting requires server-side enforcement
-
-**Frontend-only would be acceptable if**:
-
-1. No user accounts (anonymous usage only)
-2. No email functionality, OR using a form service with built-in abuse prevention
-3. Designs treated as ephemeral (no persistence expectation)
-
----
-
-## 5. Backend Justification Criteria
-
-A backend (or serverless functions) is **required** when:
-
-| Criterion | Required? | Justification |
-|-----------|-----------|---------------|
-| Password-based authentication | **Yes** | Current feature requires secure credential handling |
-| Email sending with abuse prevention | **Yes** | Current feature requires hidden API keys and rate limiting |
-| Server-side validation | Partial | Not strictly required for design data |
-| Auditability | No | Not a current requirement |
-| Access control enforcement | No | Single-user design access is sufficient |
-| Future extensibility (payments, etc.) | Future | Not a current requirement |
-
-### Minimum Viable Server Component
-
-The **minimum required server functionality** is:
-
-1. **Authentication endpoint** - Signup, login, password hashing
-2. **Email proxy endpoint** - Forward emails with server-side API keys
-3. **Rate limiting** - Prevent abuse of both
-
-This is achievable with **2-3 Azure Functions** rather than a full backend service.
-
----
-
-## 6. Recommended Architecture
-
-### Option A: Minimal Serverless (Recommended)
-
-```text
-┌─────────────────┐         ┌──────────────────────────┐
-│  React SPA      │────────▶│  Azure Static Web Apps   │
-│  (Vite build)   │         │  + Integrated Functions  │
-└─────────────────┘         └──────────────────────────┘
-                                       │
-                    ┌──────────────────┼──────────────────┐
-                    ▼                  ▼                  ▼
-            ┌─────────────┐   ┌─────────────┐   ┌─────────────┐
-            │  /api/auth  │   │ /api/email  │   │ Azure       │
-            │  (signup,   │   │ (send via   │   │ CosmosDB    │
-            │   login)    │   │  SendGrid)  │   │ (users)     │
-            └─────────────┘   └─────────────┘   └─────────────┘
+-- Designs table
+CREATE TABLE Designs (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    UserId INT NOT NULL FOREIGN KEY REFERENCES Users(Id) ON DELETE CASCADE,
+    Name NVARCHAR(255) NOT NULL,
+    SignSize NVARCHAR(50) NOT NULL,
+    CanvasData NVARCHAR(MAX) NOT NULL,  -- Fabric.js JSON
+    PreviewImage NVARCHAR(MAX),          -- Base64 PNG
+    CreatedAt DATETIME2 DEFAULT GETUTCDATE(),
+    UpdatedAt DATETIME2 DEFAULT GETUTCDATE(),
+    INDEX IX_Designs_UserId (UserId)
+);
 ```
 
-**Components:**
+**Pros:**
 
-- **Azure Static Web Apps** - Hosts React SPA + serverless API functions
-- **3 API Functions**:
-  - `POST /api/auth/signup` - Create user with bcrypt password
-  - `POST /api/auth/login` - Validate credentials, return JWT
-  - `POST /api/email/send` - Proxy email with rate limiting
-- **Azure Cosmos DB** (serverless tier) - Store users only (~$0.25/100K requests)
-- **SendGrid** or **Azure Communication Services** - Email delivery
+- Single data store, simple operations
+- Transactional consistency (user delete cascades to designs)
+- No additional Azure services
+- Familiar SQL tooling for backup/restore
 
-**What Stays Client-Side:**
+**Cons:**
 
-- Design storage (localStorage)
-- Design editing (Fabric.js)
-- Session management (JWT in memory/httpOnly cookie)
+- Large NVARCHAR(MAX) columns can impact query performance
+- Preview images inflate row size significantly
+- Database backup size grows with binary data
 
-**Estimated Monthly Cost:**
+**Verdict:** Acceptable for initial deployment. Preview images are the largest concern but manageable at expected scale.
 
-- Static Web Apps Free tier: $0
-- Functions (included in Static Web Apps): $0
-- Cosmos DB serverless: $0-5 (low usage)
-- SendGrid free tier: $0 (100 emails/day)
-- **Total: $0-5/month**
+### 2.2 Option B: Hybrid (SQL + Blob Storage)
 
-### Option B: Full Container Backend (Not Recommended for Current Scope)
+**Schema:**
 
-Would involve:
+```sql
+CREATE TABLE Designs (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    UserId INT NOT NULL FOREIGN KEY REFERENCES Users(Id) ON DELETE CASCADE,
+    Name NVARCHAR(255) NOT NULL,
+    SignSize NVARCHAR(50) NOT NULL,
+    CanvasData NVARCHAR(MAX) NOT NULL,
+    PreviewBlobUrl NVARCHAR(500),  -- URL to Blob Storage
+    CreatedAt DATETIME2 DEFAULT GETUTCDATE(),
+    UpdatedAt DATETIME2 DEFAULT GETUTCDATE()
+);
+```
 
-- Azure Container Apps or App Service
-- Full API (Express/Fastify)
-- Session management
-- Database for users AND designs
-- More complex deployment
+**Pros:**
 
-**Only justified if:**
+- Database stays lean (metadata + JSON only)
+- Blob Storage optimized for binary data
+- Better cost efficiency at scale (Blob is cheaper per GB)
 
-- Design cloud sync is required
-- Payment processing is added
-- Admin dashboard is needed
-- Multi-user collaboration on designs
+**Cons:**
 
----
+- Two services to manage
+- Orphaned blob cleanup required on design delete
+- Additional complexity for backup/restore
+- Slightly higher latency (two round-trips)
 
-## 7. Security Best Practices (Specific Recommendations)
+**Verdict:** Not justified initially. Revisit if preview images become a measurable cost or performance issue.
 
-### Authentication
+### 2.3 Storage Recommendation
 
-| Measure | Implementation | Why |
-|---------|----------------|-----|
-| Password hashing | bcrypt with cost factor 12 | Industry standard, GPU-resistant |
-| JWT tokens | Short-lived (15min), httpOnly refresh tokens | Limits exposure window |
-| Rate limiting | 5 login attempts per IP per 15min | Prevents brute force |
-| HTTPS only | Azure Static Web Apps enforces | Prevents credential interception |
+**Start with Option A (all-in-SQL).** The hybrid model adds operational complexity without clear benefit at the expected scale. Migration to hybrid is straightforward if needed later.
 
-### Email Sending
-
-| Measure | Implementation | Why |
-|---------|----------------|-----|
-| Server-side only | API key in Azure Key Vault | Never expose in client bundle |
-| Rate limiting | 3 emails per user per hour | Prevents spam abuse |
-| Input sanitization | Validate email format server-side | Prevents injection |
-| No reply-to spoofing | Always use verified sender | Prevents phishing |
-
-### Data Protection
-
-| Measure | Implementation | Why |
-|---------|----------------|-----|
-| Cosmos DB encryption | Enabled by default | Data at rest protection |
-| TLS 1.2+ | Azure default | Data in transit protection |
-| No PII in logs | Azure App Insights sanitization | Privacy compliance |
-
-### Client-Side
-
-| Measure | Implementation | Why |
-|---------|----------------|-----|
-| CSP headers | Configured in Static Web Apps | XSS mitigation |
-| No sensitive data in localStorage | Only JWT in httpOnly cookie | XSS protection |
-| Input validation | Client + server validation | Defense in depth |
+**Trigger to revisit:** Database size exceeds 5 GB, or preview image loading becomes a measurable performance bottleneck.
 
 ---
 
-## 8. Decision Matrix
+## 3. Cost Analysis
 
-| Criterion | Frontend-Only | Serverless Functions | Full Backend |
-|-----------|---------------|---------------------|--------------|
-| Security for auth | Unacceptable | Acceptable | Acceptable |
-| Email abuse prevention | None | Full control | Full control |
-| Operational complexity | Minimal | Low | Higher |
-| Cost | $0 | $0-5/mo | $20-50/mo |
-| Development effort | None needed | 2-3 functions | Full API |
-| Future extensibility | Limited | Moderate | High |
-| Design cloud sync | No | Add later | Built-in |
+### 3.1 Azure SQL Database (Serverless)
+
+Azure SQL Serverless charges for:
+
+- **Compute**: Per vCore-second when active (auto-pauses after inactivity)
+- **Storage**: Per GB-month
+
+**Pricing (East US 2, General Purpose Serverless, late 2024):**
+
+- Compute: ~$0.000145 per vCore-second
+- Storage: ~$0.115 per GB-month
+- Minimum: 0.5 vCores, auto-pause after 1 hour idle
+
+| Usage Tier | Active Hours/Month | Storage | Estimated Monthly Cost |
+|------------|-------------------|---------|------------------------|
+| Small (owner-only) | 10-20 hrs | 1 GB | $3-8 |
+| Moderate (50-100 users) | 50-100 hrs | 2-5 GB | $10-25 |
+| Growth (500+ users) | 200+ hrs | 10-20 GB | $40-80 |
+
+**Key insight:** Auto-pause is critical for cost control. A site with sporadic usage will cost far less than one with constant activity.
+
+### 3.2 Azure Container Apps (Consumption)
+
+- **Requests**: First 2M requests/month free, then ~$0.40 per million
+- **Compute**: ~$0.000024 per vCPU-second, ~$0.000003 per GiB-second
+- **Minimum**: Scale to zero when idle
+
+| Usage Tier | Requests/Month | Estimated Monthly Cost |
+|------------|----------------|------------------------|
+| Small | < 100K | $0-2 |
+| Moderate | 100K-500K | $2-5 |
+| Growth | 500K-2M | $5-15 |
+
+### 3.3 Total Cost Summary
+
+| Scenario | SQL | Container Apps | Total |
+|----------|-----|----------------|-------|
+| Owner-only / Demo | $3-8 | $0-2 | **$3-10** |
+| Small Production (50 users) | $10-15 | $2-5 | **$12-20** |
+| Moderate (200 users) | $20-35 | $5-10 | **$25-45** |
+| Growth (1000 users) | $50-80 | $10-20 | **$60-100** |
+
+### 3.4 Cost Guardrails
+
+1. **Set Azure SQL max vCores to 2** (prevents runaway compute costs)
+2. **Enable auto-pause** (1 hour idle threshold)
+3. **Set storage alerts** at 80% of provisioned tier
+4. **Monitor Container Apps scaling** (set max replicas to 3 initially)
+5. **Review monthly Azure Cost Management reports**
 
 ---
 
-## 9. Final Recommendation
+## 4. Recommended Architecture
 
-### Immediate Action: Implement Minimal Serverless Architecture
+### 4.1 Architecture Diagram
 
-1. **Migrate to Azure Static Web Apps** with integrated Functions API
-2. **Implement 3 serverless functions**:
-   - Authentication (signup/login with bcrypt)
-   - Email proxy (SendGrid with rate limiting)
-   - Token refresh (optional, for better UX)
-3. **Use Azure Cosmos DB serverless** for user storage only
-4. **Keep designs in localStorage** for now
-5. **Store secrets in Azure Key Vault**
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│                        Azure Container Apps                      │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │                    React SPA Container                   │    │
+│  │                   (nginx serving dist/)                  │    │
+│  └─────────────────────────────────────────────────────────┘    │
+│                              │                                   │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │                    API Container (Node.js)               │    │
+│  │  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌──────────────┐   │    │
+│  │  │  Auth   │ │ Designs │ │  Email  │ │    Health    │   │    │
+│  │  │  API    │ │   API   │ │  Proxy  │ │    Check     │   │    │
+│  │  └─────────┘ └─────────┘ └─────────┘ └──────────────┘   │    │
+│  └─────────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+                 ┌─────────────────────────┐
+                 │   Azure SQL Database    │
+                 │      (Serverless)       │
+                 │  ┌─────────┐ ┌────────┐ │
+                 │  │  Users  │ │Designs │ │
+                 │  └─────────┘ └────────┘ │
+                 └─────────────────────────┘
+```
 
-### Signals to Revisit This Decision
+### 4.2 Components
 
-Upgrade to full container backend **only if**:
+| Component | Technology | Purpose |
+|-----------|------------|---------|
+| Frontend | React SPA in nginx container | User interface |
+| API | Node.js (Express/Fastify) | Auth, designs, email |
+| Database | Azure SQL Serverless | User and design persistence |
+| Email | SendGrid or Azure Communication Services | Inquiry delivery |
+| Secrets | Azure Key Vault | Connection strings, JWT secret, email API key |
 
-- Users request cross-device design sync
-- Payment processing is added
-- Admin/analytics dashboard is needed
-- User collaboration features are added
-- Scale exceeds Azure Functions limits (~100K requests/month before cost increases)
+### 4.3 API Endpoints
 
-### What NOT to Do
+| Endpoint | Method | Auth | Purpose |
+|----------|--------|------|---------|
+| `/api/health` | GET | None | Health check |
+| `/api/auth/signup` | POST | None | Create account |
+| `/api/auth/login` | POST | None | Authenticate, return JWT |
+| `/api/auth/refresh` | POST | JWT | Refresh access token |
+| `/api/designs` | GET | JWT | List user's designs |
+| `/api/designs` | POST | JWT | Create new design |
+| `/api/designs/:id` | GET | JWT | Get single design |
+| `/api/designs/:id` | PUT | JWT | Update design |
+| `/api/designs/:id` | DELETE | JWT | Delete design |
+| `/api/email/inquiry` | POST | JWT | Send inquiry email |
 
-- Do not deploy current code to production with real users
-- Do not store passwords in localStorage
-- Do not expose EmailJS keys in client bundle for production
-- Do not build a full backend "just in case"
-- Do not add OAuth complexity unless password management is truly unacceptable
+### 4.4 Authentication Flow
+
+1. User signs up with email/password
+2. Password hashed with bcrypt (cost factor 12)
+3. User record created in SQL
+4. Login returns JWT access token (15 min expiry) + refresh token (7 day expiry)
+5. Access token stored in memory (not localStorage)
+6. Refresh token in httpOnly cookie
+7. All `/api/designs/*` endpoints require valid JWT
+8. JWT contains userId claim for row-level authorization
+
+### 4.5 Design Persistence Flow
+
+**Save Design:**
+
+1. Client serializes Fabric.js canvas to JSON
+2. Client generates PNG preview (data URL)
+3. POST/PUT to `/api/designs` with JSON payload
+4. API validates JWT, extracts userId
+5. API inserts/updates row in Designs table with userId constraint
+6. Returns saved design with server-generated timestamps
+
+**Load Design:**
+
+1. GET `/api/designs/:id`
+2. API validates JWT, extracts userId
+3. API queries `SELECT * FROM Designs WHERE Id = @id AND UserId = @userId`
+4. Returns design only if user owns it (row-level security)
+5. Client loads canvasData into Fabric.js
 
 ---
 
-## 10. Implementation Files to Modify
+## 5. Threat Model and Risk Assessment
 
-When implementing the serverless approach:
+### 5.1 Data at Risk
+
+| Data | Sensitivity | Breach Impact | Mitigation |
+|------|-------------|---------------|------------|
+| Passwords | High | Account takeover | bcrypt hashing, never stored plain |
+| Email addresses | Medium | Spam, phishing | Encrypted at rest (Azure default) |
+| Design data | Medium | IP theft, business loss | Row-level authorization, encrypted at rest |
+| JWT secrets | Critical | Full system compromise | Azure Key Vault, rotation policy |
+
+### 5.2 Threat Vectors
+
+| Threat | Likelihood | Impact | Mitigation |
+|--------|------------|--------|------------|
+| SQL injection | Low | Critical | Parameterized queries, ORM |
+| JWT theft (XSS) | Medium | High | httpOnly refresh tokens, short access token expiry |
+| Unauthorized design access | Low | Medium | Row-level auth on every query |
+| Brute force login | Medium | Medium | Rate limiting (5 attempts/15 min) |
+| Data breach (SQL) | Low | High | Azure encryption at rest, TLS in transit |
+
+### 5.3 Security Responsibilities (Server-Side Designs)
+
+With server-side design storage, these responsibilities are mandatory:
+
+| Responsibility | Requirement |
+|----------------|-------------|
+| Authorization | Every design query must filter by authenticated userId |
+| Backup | Azure SQL automated backups (7-day retention minimum) |
+| Deletion | User delete cascades to designs (ON DELETE CASCADE) |
+| Breach notification | Monitor for unauthorized access patterns |
+| Data portability | Provide design export capability |
+
+---
+
+## 6. Security Best Practices
+
+### 6.1 Authentication
+
+| Practice | Implementation |
+|----------|----------------|
+| Password hashing | bcrypt, cost factor 12 |
+| Token expiry | Access: 15 min, Refresh: 7 days |
+| Token storage | Access in memory, Refresh in httpOnly cookie |
+| Rate limiting | 5 login attempts per IP per 15 minutes |
+| Unique email | Database UNIQUE constraint |
+
+### 6.2 Authorization
+
+| Practice | Implementation |
+|----------|----------------|
+| Row-level security | All design queries include `WHERE UserId = @userId` |
+| JWT validation | Verify signature, expiry, issuer on every request |
+| No design enumeration | Design IDs are integers but queries always filter by user |
+
+### 6.3 Data Protection
+
+| Practice | Implementation |
+|----------|----------------|
+| Encryption at rest | Azure SQL TDE (enabled by default) |
+| Encryption in transit | TLS 1.2+ enforced |
+| Connection security | Azure SQL firewall, private endpoint if budget allows |
+| Secrets management | Azure Key Vault for all secrets |
+
+### 6.4 API Security
+
+| Practice | Implementation |
+|----------|----------------|
+| Input validation | Validate all inputs server-side |
+| CORS | Restrict to known origins |
+| Rate limiting | Global rate limit on all endpoints |
+| Error handling | Never expose stack traces or SQL errors to client |
+
+---
+
+## 7. Performance and UX Considerations
+
+### 7.1 Load/Save Latency
+
+| Operation | Expected Latency | Acceptable? |
+|-----------|------------------|-------------|
+| Load design (SQL query) | 50-200 ms | Yes |
+| Save design (SQL insert/update) | 50-200 ms | Yes |
+| List designs (SQL query) | 50-150 ms | Yes |
+
+Azure SQL Serverless has a "cold start" delay of 1-2 seconds if auto-paused. This affects the first request after idle period but is acceptable for this use case.
+
+### 7.2 Autosave Strategy
+
+**Recommendation:** Implement autosave with debouncing.
+
+- Save trigger: 30 seconds after last change, or on explicit save
+- Client tracks "dirty" state
+- Show "Saving..." indicator during API call
+- Show "Saved" confirmation with timestamp
+
+**Why not aggressive autosave:** Design changes are typically in bursts. Saving every keystroke creates unnecessary API calls.
+
+### 7.3 Client-Side Caching
+
+| Strategy | Recommendation |
+|----------|----------------|
+| Design list | Cache in memory, refresh on mount and after save/delete |
+| Current design | Keep in React state, write-through on save |
+| Offline support | Not required initially (designs are server-authoritative) |
+
+---
+
+## 8. Operational Considerations
+
+### 8.1 Schema Migration
+
+| Approach | Tool |
+|----------|------|
+| Initial deployment | SQL scripts in source control |
+| Migrations | Knex.js migrations or Prisma Migrate |
+| Rollback | Keep backward-compatible migrations |
+
+### 8.2 Backup and Restore
+
+| Aspect | Configuration |
+|--------|---------------|
+| Automated backups | Azure SQL default (7-35 day retention) |
+| Point-in-time restore | Available within retention period |
+| Long-term backup | Configure if compliance requires |
+| Restore testing | Test quarterly |
+
+### 8.3 Monitoring
+
+| What | How |
+|------|-----|
+| API errors | Application Insights |
+| SQL performance | Azure SQL Query Performance Insight |
+| Cost | Azure Cost Management alerts |
+| Uptime | Azure Monitor availability tests |
+
+### 8.4 Data Growth Management
+
+| Trigger | Action |
+|---------|--------|
+| Database > 5 GB | Review preview image strategy |
+| Designs per user > 50 | Consider archival/cleanup policy |
+| Cost > $50/month | Audit usage patterns, consider provisioned tier |
+
+---
+
+## 9. Decision Matrix
+
+| Criterion | Local-Only | Azure SQL | Cosmos DB |
+|-----------|------------|-----------|-----------|
+| Multi-device access | No | **Yes** | Yes |
+| Cost predictability | N/A | **High** | Medium |
+| Operational familiarity | N/A | **High** | Low |
+| Transactional guarantees | N/A | **Strong** | Eventual |
+| Schema flexibility | N/A | Moderate | High |
+| Scale ceiling | N/A | High (TB) | Very High |
+| Cold start latency | N/A | 1-2s | None |
+
+**Verdict:** Azure SQL is the right choice for this application's requirements and constraints.
+
+---
+
+## 10. Implementation Plan
+
+### 10.1 Frontend Changes
 
 | File | Change |
 |------|--------|
-| `src/utils/storage.js` | Remove user/password storage functions |
-| `src/utils/emailService.js` | Replace EmailJS with API call to `/api/email/send` |
-| `src/context/AuthContext.jsx` | Replace localStorage auth with API calls |
-| `src/components/auth/SignupForm.jsx` | Call `/api/auth/signup` |
-| `src/components/auth/LoginForm.jsx` | Call `/api/auth/login` |
-| **New:** `api/auth/signup/index.js` | Azure Function for signup |
-| **New:** `api/auth/login/index.js` | Azure Function for login |
-| **New:** `api/email/send/index.js` | Azure Function for email |
-| **New:** `staticwebapp.config.json` | Azure Static Web Apps configuration |
+| `src/utils/storage.js` | Remove localStorage functions, add API client |
+| `src/context/AuthContext.jsx` | Replace localStorage with API calls |
+| `src/context/DesignContext.jsx` | Replace localStorage with API calls |
+| `src/utils/api.js` | **New:** API client with JWT handling |
+
+### 10.2 Backend (New)
+
+| File | Purpose |
+|------|---------|
+| `api/server.js` | Express/Fastify entry point |
+| `api/routes/auth.js` | Authentication endpoints |
+| `api/routes/designs.js` | Design CRUD endpoints |
+| `api/routes/email.js` | Email proxy endpoint |
+| `api/middleware/auth.js` | JWT validation middleware |
+| `api/db/schema.sql` | Database schema |
+| `api/db/connection.js` | SQL connection pool |
+
+### 10.3 Infrastructure
+
+| File | Purpose |
+|------|---------|
+| `Dockerfile.api` | API container definition |
+| `docker-compose.yml` | Local development setup |
+| `infra/main.bicep` | Azure infrastructure as code |
 
 ---
 
-## Appendix A: Alternative - Passwordless Authentication
+## 11. Final Recommendation
 
-If eliminating password handling entirely is appealing, consider:
+### 11.1 Immediate Actions
 
-1. **Magic Link Auth**: User enters email, receives link, clicks to authenticate
-   - Pros: No passwords to store/hash, simpler security model
-   - Cons: Email dependency, slower UX
+1. **Provision Azure SQL Database (Serverless)** with schema from Section 2.1
+2. **Build minimal API** with auth and design endpoints
+3. **Update frontend** to use API instead of localStorage
+4. **Deploy API container** to Azure Container Apps
+5. **Configure Azure Key Vault** for secrets
+6. **Set cost alerts** at $25 and $50/month
 
-2. **Social OAuth Only**: Google/Microsoft sign-in only
-   - Pros: No password handling, trusted providers
-   - Cons: Dependency on third parties, user may not have accounts
+### 11.2 What NOT to Do
 
-3. **WebAuthn/Passkeys**: Browser-native authentication
-   - Pros: Most secure, no passwords
-   - Cons: Browser support varies, implementation complexity
+- Do not use localStorage for design persistence (multi-device required)
+- Do not store passwords in plain text
+- Do not skip row-level authorization on design queries
+- Do not provision fixed-tier SQL (use serverless)
+- Do not add Blob Storage unless data proves it necessary
+- Do not implement design versioning until requested
+- Do not add collaboration features without explicit requirement
 
 ---
 
-*Document prepared for architectural review. Ready for implementation upon approval.*
+## 12. Future Evolution Triggers
+
+| Trigger | Action |
+|---------|--------|
+| Multi-device sync conflicts | Add last-modified timestamp, conflict resolution UI |
+| Design versioning requested | Add DesignVersions table, keep N versions |
+| Large file uploads | Move preview images to Blob Storage |
+| Cost > $100/month sustained | Evaluate provisioned SQL tier |
+| Real-time collaboration | Evaluate SignalR or alternative |
+| Payment processing | Add Stripe integration, order history tables |
+
+---
+
+## Summary
+
+This architecture delivers:
+
+- **Multi-device design access** via server-side persistence
+- **Predictable costs** via Azure SQL Serverless and Container Apps consumption
+- **Security** via proper authentication, authorization, and encryption
+- **Simplicity** via minimal backend with clear responsibilities
+- **Evolvability** via clear triggers for future enhancements
+
+The design is intentionally minimal. Every component exists because a requirement demands it. The architecture can grow, but it starts calm.
+
+---
+
+*Document version: 2.0*
+*Last updated: December 2024*
+*Status: Ready for implementation*
