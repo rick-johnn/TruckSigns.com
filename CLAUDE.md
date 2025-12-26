@@ -57,3 +57,31 @@ canvas.requestRenderAll();
 - `npm run dev` - Start development server
 - `npm run build` - Production build
 - `npm run lint` - ESLint check
+
+## Docker
+
+### Production Build
+
+```bash
+# Build and start production container (serves on port 3000)
+docker compose up -d truck-signs
+
+# View logs
+docker compose logs -f truck-signs
+
+# Stop container
+docker compose down
+```
+
+### Development Mode
+
+```bash
+# Start development container with hot reload (serves on port 5173)
+docker compose --profile dev up truck-signs-dev
+```
+
+### Docker Architecture
+
+- **Dockerfile**: Multi-stage build - Node 20 Alpine for building, Nginx Alpine for serving
+- **nginx.conf**: Configured for SPA routing (all routes serve index.html), gzip compression, and static asset caching
+- **.dockerignore**: Excludes node_modules, dist, and environment files from build context
