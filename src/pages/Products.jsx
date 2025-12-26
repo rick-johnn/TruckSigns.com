@@ -65,14 +65,14 @@ const Products = () => {
       </section>
 
       {/* Product Cards */}
-      <section className="py-16 lg:py-24 bg-gray-50">
+      <section className="py-16 lg:py-24 bg-gray-50 dark:bg-navy-950">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-3 gap-8">
             {sizes.map((size) => (
               <div
                 key={size.id}
-                className={`bg-white rounded-2xl shadow-lg overflow-hidden border-2 transition-transform hover:-translate-y-1 ${
-                  size.popular ? 'border-usa-red' : 'border-transparent'
+                className={`bg-white dark:bg-navy-800 rounded-2xl shadow-lg overflow-hidden border-2 transition-transform hover:-translate-y-1 ${
+                  size.popular ? 'border-usa-red' : 'border-transparent dark:border-navy-700'
                 }`}
               >
                 {/* Popular Badge */}
@@ -83,7 +83,7 @@ const Products = () => {
                 )}
 
                 {/* Visual Representation */}
-                <div className="p-8 bg-gradient-to-b from-gray-100 to-gray-50">
+                <div className="p-8 bg-gradient-to-b from-gray-100 to-gray-50 dark:from-navy-700 dark:to-navy-800">
                   <div className="relative">
                     {/* Sign */}
                     <div
@@ -102,7 +102,7 @@ const Products = () => {
                     </div>
                     {/* Dimension Lines */}
                     <div className="flex justify-center mt-4">
-                      <div className="flex items-center text-gray-500 text-sm">
+                      <div className="flex items-center text-gray-500 dark:text-navy-300 text-sm">
                         <Ruler className="h-4 w-4 mr-1" />
                         {size.truckBed} Truck Bed
                       </div>
@@ -112,43 +112,43 @@ const Products = () => {
 
                 {/* Details */}
                 <div className="p-8">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                     {size.name}
                   </h2>
-                  <p className="text-gray-600 mb-6">{size.description}</p>
+                  <p className="text-gray-600 dark:text-navy-300 mb-6">{size.description}</p>
 
                   {/* Features */}
                   <ul className="space-y-3 mb-8">
                     <li className="flex items-start">
                       <Check className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
-                      <span className="text-gray-700">
+                      <span className="text-gray-700 dark:text-navy-200">
                         Fits {size.truckBed} truck beds
                       </span>
                     </li>
                     <li className="flex items-start">
                       <Check className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
-                      <span className="text-gray-700">
+                      <span className="text-gray-700 dark:text-navy-200">
                         {size.width}&quot; wide x {size.height}&quot; tall
                       </span>
                     </li>
                     <li className="flex items-start">
                       <Check className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
-                      <span className="text-gray-700">
+                      <span className="text-gray-700 dark:text-navy-200">
                         Aluminum frame with clear backing
                       </span>
                     </li>
                     <li className="flex items-start">
                       <Check className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
-                      <span className="text-gray-700">
+                      <span className="text-gray-700 dark:text-navy-200">
                         Quick-release mounting system
                       </span>
                     </li>
                   </ul>
 
                   {/* Price */}
-                  <div className="bg-gray-50 rounded-xl p-4 text-center mb-6">
-                    <span className="text-gray-600">Pricing</span>
-                    <div className="text-2xl font-bold text-navy">
+                  <div className="bg-gray-50 dark:bg-navy-700 rounded-xl p-4 text-center mb-6">
+                    <span className="text-gray-600 dark:text-navy-300">Pricing</span>
+                    <div className="text-2xl font-bold text-navy dark:text-white">
                       Contact for Quote
                     </div>
                   </div>
@@ -172,25 +172,25 @@ const Products = () => {
       </section>
 
       {/* Specifications */}
-      <section className="py-16 lg:py-24 bg-white">
+      <section className="py-16 lg:py-24 bg-white dark:bg-navy-900">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white text-center mb-12">
               Product Specifications
             </h2>
 
-            <div className="bg-gray-50 rounded-2xl overflow-hidden">
+            <div className="bg-gray-50 dark:bg-navy-800 rounded-2xl overflow-hidden">
               <table className="w-full">
                 <tbody>
                   {specifications.map((spec, index) => (
                     <tr
                       key={index}
-                      className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
+                      className={index % 2 === 0 ? 'bg-white dark:bg-navy-800' : 'bg-gray-50 dark:bg-navy-700'}
                     >
-                      <td className="px-6 py-4 font-semibold text-gray-900">
+                      <td className="px-6 py-4 font-semibold text-gray-900 dark:text-white">
                         {spec.label}
                       </td>
-                      <td className="px-6 py-4 text-gray-600">{spec.value}</td>
+                      <td className="px-6 py-4 text-gray-600 dark:text-navy-300">{spec.value}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -201,22 +201,22 @@ const Products = () => {
       </section>
 
       {/* Benefits */}
-      <section className="py-16 lg:py-24 bg-gray-50">
+      <section className="py-16 lg:py-24 bg-gray-50 dark:bg-navy-950">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white text-center mb-12">
             Why Our Signs Stand Out
           </h2>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {benefits.map((benefit, index) => (
               <div key={index} className="text-center">
-                <div className="w-16 h-16 bg-navy rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-navy dark:bg-navy-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <benefit.icon className="h-8 w-8 text-white" />
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
                   {benefit.title}
                 </h3>
-                <p className="text-gray-600 text-sm">{benefit.description}</p>
+                <p className="text-gray-600 dark:text-navy-300 text-sm">{benefit.description}</p>
               </div>
             ))}
           </div>

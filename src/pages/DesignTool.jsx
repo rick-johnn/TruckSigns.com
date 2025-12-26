@@ -75,16 +75,27 @@ const DesignTool = () => {
     const designIdToLoad = currentDesign.id;
     if (canvasLoadedForDesignRef.current !== designIdToLoad) {
       canvasLoadedForDesignRef.current = designIdToLoad;
-      // Clear existing objects before loading
-      canvas.clear();
-      canvas.loadFromJSON(currentDesign.canvasData, () => {
-        // Force multiple render passes to ensure objects are visible
-        canvas.requestRenderAll();
-        // Also schedule another render after a brief delay
-        setTimeout(() => {
-          canvas.renderAll();
-        }, 100);
-      });
+
+      // Fabric.js v6 loadFromJSON returns a Promise
+      const loadDesignData = async () => {
+        // Clear existing objects before loading
+        canvas.clear();
+        canvas.backgroundColor = '#ffffff';
+
+        try {
+          await canvas.loadFromJSON(currentDesign.canvasData);
+          // Mark all objects as dirty to force re-render
+          canvas.getObjects().forEach(obj => {
+            obj.setCoords();
+            obj.dirty = true;
+          });
+          canvas.requestRenderAll();
+        } catch (err) {
+          console.error('Error loading design:', err);
+        }
+      };
+
+      loadDesignData();
     }
   }, [canvas, currentDesign]);
 
@@ -101,11 +112,18 @@ const DesignTool = () => {
     if (design?.canvasData && canvasLoadedForDesignRef.current !== design.id) {
       canvasLoadedForDesignRef.current = design.id;
       fabricCanvas.clear();
-      fabricCanvas.loadFromJSON(design.canvasData, () => {
+      fabricCanvas.backgroundColor = '#ffffff';
+
+      // Fabric.js v6 loadFromJSON returns a Promise
+      fabricCanvas.loadFromJSON(design.canvasData).then(() => {
+        // Mark all objects as dirty to force re-render
+        fabricCanvas.getObjects().forEach(obj => {
+          obj.setCoords();
+          obj.dirty = true;
+        });
         fabricCanvas.requestRenderAll();
-        setTimeout(() => {
-          fabricCanvas.renderAll();
-        }, 100);
+      }).catch(err => {
+        console.error('Error loading design on canvas ready:', err);
       });
     }
   }, []);
@@ -324,9 +342,9 @@ const DesignTool = () => {
 
   return (
     <Layout fullWidth noFooter>
-      <div className="flex flex-col lg:flex-row min-h-[calc(100vh-80px)]">
+      <div className="flex flex-col lg:flex-row min-h-[calc(100vh-80px)] bg-gray-100 dark:bg-navy-950">
         {/* Left Sidebar */}
-        <div className="w-full lg:w-72 bg-gray-50 border-b lg:border-b-0 lg:border-r border-gray-200 p-4 overflow-y-auto">
+        <div className="w-full lg:w-72 bg-gray-50 dark:bg-navy-900 border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-navy-700 p-4 overflow-y-auto">
           <div className="space-y-4">
             <SizeSelector
               selectedSize={selectedSize}
@@ -343,11 +361,11 @@ const DesignTool = () => {
         {/* Main Content */}
         <div className="flex-1 flex flex-col">
           {/* Top Actions */}
-          <div className="bg-white border-b border-gray-200 p-4">
+          <div className="bg-white dark:bg-navy-900 border-b border-gray-200 dark:border-navy-700 p-4">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Design Tool</h1>
-                <p className="text-sm text-gray-500">
+                <h1 className="text-xl font-bold text-gray-900 dark:text-white">Design Tool</h1>
+                <p className="text-sm text-gray-500 dark:text-navy-400">
                   {currentDesign?.name || 'New Design'} • {selectedSize.name}
                 </p>
               </div>
@@ -381,7 +399,7 @@ const DesignTool = () => {
           </div>
 
           {/* Toolbar */}
-          <div className="p-4 bg-gray-50 border-b border-gray-200">
+          <div className="p-4 bg-gray-50 dark:bg-navy-800 border-b border-gray-200 dark:border-navy-700">
             <Toolbar
               onAddImage={() => setImageUploaderOpen(true)}
               onAddText={handleAddText}
@@ -398,7 +416,7 @@ const DesignTool = () => {
           </div>
 
           {/* Canvas Area */}
-          <div className="flex-1 p-4 lg:p-8 bg-gray-100 overflow-auto">
+          <div className="flex-1 p-4 lg:p-8 bg-gray-100 dark:bg-navy-950 overflow-auto">
             <Canvas
               selectedSize={selectedSize}
               onCanvasReady={handleCanvasReady}
@@ -409,7 +427,7 @@ const DesignTool = () => {
         </div>
 
         {/* Right Sidebar - Properties */}
-        <div className="w-full lg:w-72 bg-gray-50 border-t lg:border-t-0 lg:border-l border-gray-200 p-4 overflow-y-auto">
+        <div className="w-full lg:w-72 bg-gray-50 dark:bg-navy-900 border-t lg:border-t-0 lg:border-l border-gray-200 dark:border-navy-700 p-4 overflow-y-auto">
           <div className="space-y-4">
             {selectedObject?.type === 'textbox' ? (
               <TextEditor selectedObject={selectedObject} canvas={canvas} />
@@ -417,17 +435,17 @@ const DesignTool = () => {
               ['rect', 'circle', 'line'].includes(selectedObject.type) ? (
               <ShapeEditor selectedObject={selectedObject} canvas={canvas} />
             ) : (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-                <p className="text-gray-500 text-sm text-center">
+              <div className="bg-white dark:bg-navy-800 rounded-xl shadow-sm border border-gray-200 dark:border-navy-700 p-4">
+                <p className="text-gray-500 dark:text-navy-400 text-sm text-center">
                   Select an element to edit its properties
                 </p>
               </div>
             )}
 
             {/* Tips */}
-            <div className="bg-blue-50 rounded-xl p-4">
-              <h4 className="font-semibold text-blue-900 mb-2">Tips</h4>
-              <ul className="text-sm text-blue-800 space-y-1">
+            <div className="bg-blue-50 dark:bg-navy-800 rounded-xl p-4 border border-blue-100 dark:border-navy-700">
+              <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-2">Tips</h4>
+              <ul className="text-sm text-blue-800 dark:text-navy-300 space-y-1">
                 <li>• Use PNG with transparency for logos</li>
                 <li>• Click an element to select it</li>
                 <li>• Drag corners to resize</li>

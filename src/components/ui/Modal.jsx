@@ -45,14 +45,14 @@ const Modal = ({
               leaveTo="opacity-0 scale-95"
             >
               <Dialog.Panel
-                className={`w-full ${sizes[size]} transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all`}
+                className={`w-full ${sizes[size]} transform overflow-hidden rounded-2xl bg-white dark:bg-navy-800 p-6 text-left align-middle shadow-xl transition-all`}
               >
                 {(title || showCloseButton) && (
                   <div className="flex items-center justify-between mb-4">
                     {title && (
                       <Dialog.Title
                         as="h3"
-                        className="text-xl font-bold text-gray-900"
+                        className="text-xl font-bold text-gray-900 dark:text-white"
                       >
                         {title}
                       </Dialog.Title>
@@ -60,7 +60,7 @@ const Modal = ({
                     {showCloseButton && (
                       <button
                         type="button"
-                        className="rounded-full p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                        className="rounded-full p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:text-navy-400 dark:hover:text-white dark:hover:bg-navy-700 transition-colors"
                         onClick={onClose}
                       >
                         <X className="h-5 w-5" />

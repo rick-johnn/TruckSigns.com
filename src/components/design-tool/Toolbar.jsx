@@ -56,11 +56,11 @@ const Toolbar = ({
   ];
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+    <div className="bg-white dark:bg-navy-900 rounded-xl shadow-sm border border-gray-200 dark:border-navy-700 p-4">
       <div className="flex flex-wrap gap-4">
         {/* Add Tools */}
         <div className="flex-1 min-w-[200px]">
-          <h3 className="text-xs font-semibold text-gray-500 uppercase mb-3">
+          <h3 className="text-xs font-semibold text-gray-500 dark:text-navy-400 uppercase mb-3">
             Add Elements
           </h3>
           <div className="flex flex-wrap gap-2">
@@ -68,7 +68,7 @@ const Toolbar = ({
               <button
                 key={index}
                 onClick={tool.action}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-50 rounded-lg hover:bg-gray-100 hover:text-navy transition-colors"
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-navy-200 bg-gray-50 dark:bg-navy-800 rounded-lg hover:bg-gray-100 dark:hover:bg-navy-700 hover:text-navy dark:hover:text-white transition-colors"
                 title={tool.label}
               >
                 <tool.icon className="h-4 w-4" />
@@ -81,7 +81,7 @@ const Toolbar = ({
         {/* Object Actions */}
         {selectedObject && (
           <div className="flex-1 min-w-[200px]">
-            <h3 className="text-xs font-semibold text-gray-500 uppercase mb-3">
+            <h3 className="text-xs font-semibold text-gray-500 dark:text-navy-400 uppercase mb-3">
               Selected Object
             </h3>
             <div className="flex flex-wrap gap-2">
@@ -91,8 +91,8 @@ const Toolbar = ({
                   onClick={action.action}
                   className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                     action.danger
-                      ? 'text-red-600 bg-red-50 hover:bg-red-100'
-                      : 'text-gray-700 bg-gray-50 hover:bg-gray-100 hover:text-navy'
+                      ? 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50'
+                      : 'text-gray-700 dark:text-navy-200 bg-gray-50 dark:bg-navy-800 hover:bg-gray-100 dark:hover:bg-navy-700 hover:text-navy dark:hover:text-white'
                   }`}
                   title={action.label}
                 >
@@ -106,12 +106,12 @@ const Toolbar = ({
 
         {/* Canvas Actions */}
         <div>
-          <h3 className="text-xs font-semibold text-gray-500 uppercase mb-3">
+          <h3 className="text-xs font-semibold text-gray-500 dark:text-navy-400 uppercase mb-3">
             Canvas
           </h3>
           <button
             onClick={onResetCanvas}
-            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-50 rounded-lg hover:bg-gray-100 hover:text-navy transition-colors"
+            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-navy-200 bg-gray-50 dark:bg-navy-800 rounded-lg hover:bg-gray-100 dark:hover:bg-navy-700 hover:text-navy dark:hover:text-white transition-colors"
             title="Clear Canvas"
           >
             <RotateCcw className="h-4 w-4" />

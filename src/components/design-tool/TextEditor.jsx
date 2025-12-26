@@ -41,8 +41,8 @@ const TextEditor = ({ selectedObject, canvas }) => {
 
   if (!selectedObject || selectedObject.type !== 'textbox') {
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-        <p className="text-gray-500 text-sm text-center">
+      <div className="bg-white dark:bg-navy-800 rounded-xl shadow-sm border border-gray-200 dark:border-navy-700 p-4">
+        <p className="text-gray-500 dark:text-navy-400 text-sm text-center">
           Select a text element to edit its properties
         </p>
       </div>
@@ -50,18 +50,18 @@ const TextEditor = ({ selectedObject, canvas }) => {
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 space-y-4">
-      <h3 className="font-semibold text-gray-900">Text Properties</h3>
+    <div className="bg-white dark:bg-navy-800 rounded-xl shadow-sm border border-gray-200 dark:border-navy-700 p-4 space-y-4">
+      <h3 className="font-semibold text-gray-900 dark:text-white">Text Properties</h3>
 
       {/* Font Family */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-gray-700 dark:text-navy-300 mb-1">
           Font
         </label>
         <select
           value={textProps.fontFamily}
           onChange={(e) => updateObject({ fontFamily: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent"
+          className="w-full px-3 py-2 border border-gray-300 dark:border-navy-600 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent bg-white dark:bg-navy-700 text-gray-900 dark:text-white"
         >
           {AVAILABLE_FONTS.map((font) => (
             <option key={font.value} value={font.value} style={{ fontFamily: font.value }}>
@@ -73,7 +73,7 @@ const TextEditor = ({ selectedObject, canvas }) => {
 
       {/* Font Size */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-gray-700 dark:text-navy-300 mb-1">
           Size: {textProps.fontSize}px
         </label>
         <input
@@ -82,13 +82,13 @@ const TextEditor = ({ selectedObject, canvas }) => {
           max="120"
           value={textProps.fontSize}
           onChange={(e) => updateObject({ fontSize: parseInt(e.target.value) })}
-          className="w-full"
+          className="w-full accent-navy"
         />
       </div>
 
       {/* Style Buttons */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-gray-700 dark:text-navy-300 mb-2">
           Style
         </label>
         <div className="flex gap-2">
@@ -101,7 +101,7 @@ const TextEditor = ({ selectedObject, canvas }) => {
             className={`p-2 rounded-lg border transition-colors ${
               textProps.fontWeight === 'bold'
                 ? 'bg-navy text-white border-navy'
-                : 'border-gray-300 hover:bg-gray-50'
+                : 'border-gray-300 dark:border-navy-600 hover:bg-gray-50 dark:hover:bg-navy-700 text-gray-700 dark:text-navy-300'
             }`}
           >
             <Bold className="h-4 w-4" />
@@ -115,7 +115,7 @@ const TextEditor = ({ selectedObject, canvas }) => {
             className={`p-2 rounded-lg border transition-colors ${
               textProps.fontStyle === 'italic'
                 ? 'bg-navy text-white border-navy'
-                : 'border-gray-300 hover:bg-gray-50'
+                : 'border-gray-300 dark:border-navy-600 hover:bg-gray-50 dark:hover:bg-navy-700 text-gray-700 dark:text-navy-300'
             }`}
           >
             <Italic className="h-4 w-4" />
@@ -125,7 +125,7 @@ const TextEditor = ({ selectedObject, canvas }) => {
             className={`p-2 rounded-lg border transition-colors ${
               textProps.underline
                 ? 'bg-navy text-white border-navy'
-                : 'border-gray-300 hover:bg-gray-50'
+                : 'border-gray-300 dark:border-navy-600 hover:bg-gray-50 dark:hover:bg-navy-700 text-gray-700 dark:text-navy-300'
             }`}
           >
             <Underline className="h-4 w-4" />
@@ -135,7 +135,7 @@ const TextEditor = ({ selectedObject, canvas }) => {
 
       {/* Alignment */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-gray-700 dark:text-navy-300 mb-2">
           Alignment
         </label>
         <div className="flex gap-2">
@@ -144,7 +144,7 @@ const TextEditor = ({ selectedObject, canvas }) => {
             className={`p-2 rounded-lg border transition-colors ${
               textProps.textAlign === 'left'
                 ? 'bg-navy text-white border-navy'
-                : 'border-gray-300 hover:bg-gray-50'
+                : 'border-gray-300 dark:border-navy-600 hover:bg-gray-50 dark:hover:bg-navy-700 text-gray-700 dark:text-navy-300'
             }`}
           >
             <AlignLeft className="h-4 w-4" />
@@ -154,7 +154,7 @@ const TextEditor = ({ selectedObject, canvas }) => {
             className={`p-2 rounded-lg border transition-colors ${
               textProps.textAlign === 'center'
                 ? 'bg-navy text-white border-navy'
-                : 'border-gray-300 hover:bg-gray-50'
+                : 'border-gray-300 dark:border-navy-600 hover:bg-gray-50 dark:hover:bg-navy-700 text-gray-700 dark:text-navy-300'
             }`}
           >
             <AlignCenter className="h-4 w-4" />
@@ -164,7 +164,7 @@ const TextEditor = ({ selectedObject, canvas }) => {
             className={`p-2 rounded-lg border transition-colors ${
               textProps.textAlign === 'right'
                 ? 'bg-navy text-white border-navy'
-                : 'border-gray-300 hover:bg-gray-50'
+                : 'border-gray-300 dark:border-navy-600 hover:bg-gray-50 dark:hover:bg-navy-700 text-gray-700 dark:text-navy-300'
             }`}
           >
             <AlignRight className="h-4 w-4" />
