@@ -1,0 +1,13 @@
+{
+  "name": "trucksigns-api",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "func start",
+    "test": "echo \"No tests yet\""
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2"
+  }
+}

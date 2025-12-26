@@ -12,7 +12,15 @@
       "Bash(npm view:*)",
       "Bash(npm search:*)",
       "Bash(npm run lint:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(az --version:*)",
+      "Bash(az account show:*)",
+      "Bash(az staticwebapp list:*)",
+      "Bash(az account:*)",
+      "Bash(az login:*)",
+      "Bash(az group create:*)",
+      "Bash(az staticwebapp:*)",
+      "Bash(npx:*)"
     ]
   }
 }
