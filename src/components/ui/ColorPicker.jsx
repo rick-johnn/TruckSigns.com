@@ -36,7 +36,7 @@ const ColorPicker = ({
   return (
     <div className="relative">
       {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-gray-700 dark:text-navy-300 mb-2">
           {label}
         </label>
       )}
@@ -48,7 +48,7 @@ const ColorPicker = ({
             type="button"
             onClick={() => onChange('transparent')}
             className={`w-8 h-8 rounded-lg border-2 transition-transform hover:scale-110 relative overflow-hidden ${
-              isTransparent ? 'border-navy scale-110 ring-2 ring-navy ring-offset-1' : 'border-gray-200'
+              isTransparent ? 'border-navy scale-110 ring-2 ring-navy ring-offset-1' : 'border-gray-200 dark:border-navy-600'
             }`}
             title="Transparent"
           >
@@ -77,7 +77,7 @@ const ColorPicker = ({
             className={`w-8 h-8 rounded-lg border-2 transition-transform hover:scale-110 ${
               color === presetColor && !isTransparent
                 ? 'border-navy scale-110 ring-2 ring-navy ring-offset-1'
-                : 'border-gray-200'
+                : 'border-gray-200 dark:border-navy-600'
             }`}
             style={{ backgroundColor: presetColor }}
             title={presetColor}
@@ -90,7 +90,7 @@ const ColorPicker = ({
           type="button"
           onClick={() => setIsOpen(!isOpen)}
           className={`w-8 h-8 rounded-lg border-2 transition-all hover:scale-110 flex items-center justify-center ${
-            isOpen ? 'border-navy ring-2 ring-navy ring-offset-1' : 'border-gray-300'
+            isOpen ? 'border-navy ring-2 ring-navy ring-offset-1' : 'border-gray-300 dark:border-navy-600'
           }`}
           style={{
             background: !isTransparent && !presetColors.includes(color)
@@ -106,7 +106,7 @@ const ColorPicker = ({
 
         {/* Current color display */}
         {!isTransparent && (
-          <span className="text-xs text-gray-500 font-mono uppercase">
+          <span className="text-xs text-gray-500 dark:text-navy-400 font-mono uppercase">
             {color}
           </span>
         )}
@@ -116,7 +116,7 @@ const ColorPicker = ({
       {isOpen && (
         <div
           ref={popoverRef}
-          className="absolute z-50 mt-2 p-3 bg-white rounded-xl shadow-xl border border-gray-200"
+          className="absolute z-50 mt-2 p-3 bg-white dark:bg-navy-800 rounded-xl shadow-xl border border-gray-200 dark:border-navy-600"
           style={{ left: 0 }}
         >
           <HexColorPicker
@@ -127,12 +127,12 @@ const ColorPicker = ({
 
           {/* Hex input */}
           <div className="mt-3 flex items-center gap-2">
-            <span className="text-gray-500 text-sm">#</span>
+            <span className="text-gray-500 dark:text-navy-400 text-sm">#</span>
             <HexColorInput
               color={displayColor}
               onChange={onChange}
               prefixed={false}
-              className="flex-1 px-2 py-1 text-sm font-mono uppercase border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-navy focus:border-transparent"
+              className="flex-1 px-2 py-1 text-sm font-mono uppercase border border-gray-300 dark:border-navy-600 rounded focus:outline-none focus:ring-2 focus:ring-navy focus:border-transparent bg-white dark:bg-navy-700 text-gray-900 dark:text-white"
             />
           </div>
 
@@ -144,7 +144,7 @@ const ColorPicker = ({
                   key={quickColor}
                   type="button"
                   onClick={() => onChange(quickColor)}
-                  className="w-6 h-6 rounded border border-gray-300 hover:scale-110 transition-transform"
+                  className="w-6 h-6 rounded border border-gray-300 dark:border-navy-600 hover:scale-110 transition-transform"
                   style={{ backgroundColor: quickColor }}
                 />
               )

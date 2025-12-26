@@ -32,8 +32,8 @@ const ShapeEditor = ({ selectedObject, canvas }) => {
 
   if (!selectedObject || !['rect', 'circle', 'line'].includes(selectedObject.type)) {
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-        <p className="text-gray-500 text-sm text-center">
+      <div className="bg-white dark:bg-navy-800 rounded-xl shadow-sm border border-gray-200 dark:border-navy-700 p-4">
+        <p className="text-gray-500 dark:text-navy-400 text-sm text-center">
           Select a shape to edit its properties
         </p>
       </div>
@@ -43,8 +43,8 @@ const ShapeEditor = ({ selectedObject, canvas }) => {
   const isLine = selectedObject.type === 'line';
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 space-y-4">
-      <h3 className="font-semibold text-gray-900">Shape Properties</h3>
+    <div className="bg-white dark:bg-navy-800 rounded-xl shadow-sm border border-gray-200 dark:border-navy-700 p-4 space-y-4">
+      <h3 className="font-semibold text-gray-900 dark:text-white">Shape Properties</h3>
 
       {/* Fill Color (not for lines) */}
       {!isLine && (
@@ -67,7 +67,7 @@ const ShapeEditor = ({ selectedObject, canvas }) => {
 
       {/* Stroke Width */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-gray-700 dark:text-navy-300 mb-1">
           {isLine ? 'Line Width' : 'Border Width'}: {shapeProps.strokeWidth}px
         </label>
         <input
@@ -76,13 +76,13 @@ const ShapeEditor = ({ selectedObject, canvas }) => {
           max="20"
           value={shapeProps.strokeWidth}
           onChange={(e) => updateObject({ strokeWidth: parseInt(e.target.value) })}
-          className="w-full"
+          className="w-full accent-navy"
         />
       </div>
 
       {/* Opacity */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-gray-700 dark:text-navy-300 mb-1">
           Opacity: {Math.round(shapeProps.opacity * 100)}%
         </label>
         <input
@@ -92,7 +92,7 @@ const ShapeEditor = ({ selectedObject, canvas }) => {
           step="0.1"
           value={shapeProps.opacity}
           onChange={(e) => updateObject({ opacity: parseFloat(e.target.value) })}
-          className="w-full"
+          className="w-full accent-navy"
         />
       </div>
     </div>

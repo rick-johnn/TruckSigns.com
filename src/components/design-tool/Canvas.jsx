@@ -1,6 +1,5 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import * as fabric from 'fabric';
-import { SIGN_SIZES } from '../../utils/constants';
 
 const Canvas = ({
   selectedSize,
@@ -11,7 +10,14 @@ const Canvas = ({
   const canvasRef = useRef(null);
   const fabricRef = useRef(null);
   const containerRef = useRef(null);
+  const initializedRef = useRef(false);
+  const callbacksRef = useRef({ onCanvasReady, onObjectSelected, onObjectDeselected });
   const [dimensions, setDimensions] = useState({ width: 800, height: 291 });
+
+  // Keep callbacks ref up to date without triggering re-renders
+  useEffect(() => {
+    callbacksRef.current = { onCanvasReady, onObjectSelected, onObjectDeselected };
+  }, [onCanvasReady, onObjectSelected, onObjectDeselected]);
 
   // Calculate canvas dimensions based on sign size
   const calculateDimensions = useCallback(() => {
@@ -32,9 +38,11 @@ const Canvas = ({
     return { width: Math.floor(width), height: Math.floor(height) };
   }, [selectedSize]);
 
-  // Initialize canvas
+  // Initialize canvas only once
   useEffect(() => {
-    if (!canvasRef.current) return;
+    if (!canvasRef.current || initializedRef.current) return;
+
+    initializedRef.current = true;
 
     const dims = calculateDimensions();
     setDimensions(dims);
@@ -49,30 +57,29 @@ const Canvas = ({
 
     fabricRef.current = canvas;
 
-    // Event handlers
+    // Event handlers - use refs to avoid stale closures
     canvas.on('selection:created', (e) => {
-      if (onObjectSelected) onObjectSelected(e.selected[0]);
+      callbacksRef.current.onObjectSelected?.(e.selected[0]);
     });
 
     canvas.on('selection:updated', (e) => {
-      if (onObjectSelected) onObjectSelected(e.selected[0]);
+      callbacksRef.current.onObjectSelected?.(e.selected[0]);
     });
 
     canvas.on('selection:cleared', () => {
-      if (onObjectDeselected) onObjectDeselected();
+      callbacksRef.current.onObjectDeselected?.();
     });
 
     // Notify parent that canvas is ready
-    if (onCanvasReady) {
-      onCanvasReady(canvas);
-    }
+    callbacksRef.current.onCanvasReady?.(canvas);
 
     // Handle resize
     const handleResize = () => {
+      if (!fabricRef.current) return;
       const newDims = calculateDimensions();
       setDimensions(newDims);
-      canvas.setDimensions({ width: newDims.width, height: newDims.height });
-      canvas.renderAll();
+      fabricRef.current.setDimensions({ width: newDims.width, height: newDims.height });
+      fabricRef.current.renderAll();
     };
 
     window.addEventListener('resize', handleResize);
@@ -80,8 +87,9 @@ const Canvas = ({
     return () => {
       window.removeEventListener('resize', handleResize);
       canvas.dispose();
+      initializedRef.current = false;
     };
-  }, [calculateDimensions, onCanvasReady, onObjectSelected, onObjectDeselected]);
+  }, []); // Empty dependency array - initialize only once
 
   // Update dimensions when size changes
   useEffect(() => {
@@ -96,24 +104,24 @@ const Canvas = ({
   return (
     <div ref={containerRef} className="w-full">
       <div
-        className="relative bg-gray-100 rounded-xl p-6 overflow-hidden"
-        style={{ minHeight: dimensions.height + 48 }}
+        className="relative bg-gray-200 dark:bg-navy-800 rounded-xl p-6 pb-10 overflow-hidden"
+        style={{ minHeight: dimensions.height + 72 }}
       >
         {/* Size indicator */}
-        <div className="absolute top-2 left-2 bg-navy text-white text-xs px-2 py-1 rounded z-10">
+        <div className="absolute top-2 left-2 bg-navy dark:bg-navy-600 text-white text-xs px-2 py-1 rounded z-10">
           {selectedSize.widthLabel} x {selectedSize.heightLabel} ({selectedSize.truckBed})
         </div>
 
         {/* Canvas wrapper with shadow */}
         <div
-          className="mx-auto shadow-lg border-2 border-gray-300"
+          className="mx-auto shadow-lg border-2 border-gray-300 dark:border-navy-600"
           style={{ width: dimensions.width, height: dimensions.height }}
         >
           <canvas ref={canvasRef} />
         </div>
 
         {/* Frame indicator */}
-        <div className="absolute bottom-2 right-2 text-gray-500 text-xs">
+        <div className="absolute bottom-4 right-4 text-gray-500 dark:text-navy-400 text-xs">
           Aluminum Frame Preview
         </div>
       </div>

@@ -228,20 +228,20 @@ const TemplateGallery = ({ canvas, canvasWidth, canvasHeight, onApply }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-      <h3 className="font-semibold text-gray-900 mb-3">Templates</h3>
+    <div className="bg-white dark:bg-navy-800 rounded-xl shadow-sm border border-gray-200 dark:border-navy-700 p-4">
+      <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Templates</h3>
       <div className="grid grid-cols-2 gap-2">
         {templates.map((template) => (
           <button
             key={template.id}
             onClick={() => applyTemplate(template)}
-            className="p-3 border border-gray-200 rounded-lg hover:border-navy hover:bg-navy/5 transition-colors text-left group"
+            className="p-3 border border-gray-200 dark:border-navy-600 rounded-lg hover:border-navy dark:hover:border-navy-400 hover:bg-navy/5 dark:hover:bg-navy-700 transition-colors text-left group"
           >
-            <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center mb-2 group-hover:bg-navy/10">
-              <template.icon className="h-4 w-4 text-gray-600 group-hover:text-navy" />
+            <div className="w-8 h-8 bg-gray-100 dark:bg-navy-700 rounded-lg flex items-center justify-center mb-2 group-hover:bg-navy/10 dark:group-hover:bg-navy-600">
+              <template.icon className="h-4 w-4 text-gray-600 dark:text-navy-300 group-hover:text-navy dark:group-hover:text-white" />
             </div>
-            <div className="text-sm font-medium text-gray-900">{template.name}</div>
-            <div className="text-xs text-gray-500">{template.description}</div>
+            <div className="text-sm font-medium text-gray-900 dark:text-white">{template.name}</div>
+            <div className="text-xs text-gray-500 dark:text-navy-400">{template.description}</div>
           </button>
         ))}
       </div>

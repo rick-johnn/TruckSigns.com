@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Modal, Button, Input, Textarea, Select } from '../ui';
+import { Modal, Button, Textarea, Select } from '../ui';
 import { useAuth } from '../../context/AuthContext';
 import { sendInquiryEmail } from '../../utils/emailService';
 import {
@@ -76,7 +76,7 @@ const InquiryModal = ({ isOpen, onClose, designPreview, signSize }) => {
             Inquiry Sent Successfully!
           </h3>
           <p className="text-gray-600 mb-6">
-            Thank you for your interest! We'll review your design and get back to
+            Thank you for your interest! We&apos;ll review your design and get back to
             you within 1-2 business days with a quote.
           </p>
           <Button variant="primary" onClick={handleClose}>

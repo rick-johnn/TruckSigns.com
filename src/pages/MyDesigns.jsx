@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Layout } from '../components/layout';
 import { Button, Modal } from '../components/ui';
 import { InquiryModal } from '../components/design-tool';
@@ -86,15 +86,15 @@ const MyDesigns = () => {
       </section>
 
       {/* Designs Grid */}
-      <section className="py-12 bg-gray-50 min-h-[50vh]">
+      <section className="py-12 bg-gray-50 dark:bg-navy-950 min-h-[50vh]">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {designs.length === 0 ? (
             <div className="text-center py-16">
-              <FolderOpen className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <h2 className="text-xl font-bold text-gray-900 mb-2">
+              <FolderOpen className="h-16 w-16 text-gray-300 dark:text-navy-600 mx-auto mb-4" />
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
                 No designs yet
               </h2>
-              <p className="text-gray-600 mb-6">
+              <p className="text-gray-600 dark:text-navy-300 mb-6">
                 Start creating your first truck sign design!
               </p>
               <Button variant="primary" icon={Plus} onClick={handleNewDesign}>
@@ -108,10 +108,10 @@ const MyDesigns = () => {
                 return (
                   <div
                     key={design.id}
-                    className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
+                    className="bg-white dark:bg-navy-800 rounded-xl shadow-sm border border-gray-200 dark:border-navy-700 overflow-hidden hover:shadow-md transition-shadow"
                   >
                     {/* Preview */}
-                    <div className="aspect-[3/1] bg-gray-100 relative">
+                    <div className="aspect-[3/1] bg-gray-100 dark:bg-navy-700 relative">
                       {design.previewImage ? (
                         <img
                           src={design.previewImage}
@@ -119,7 +119,7 @@ const MyDesigns = () => {
                           className="w-full h-full object-contain"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400">
+                        <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-navy-500">
                           No preview
                         </div>
                       )}
@@ -127,18 +127,18 @@ const MyDesigns = () => {
 
                     {/* Info */}
                     <div className="p-4">
-                      <h3 className="font-bold text-gray-900 truncate mb-2">
+                      <h3 className="font-bold text-gray-900 dark:text-white truncate mb-2">
                         {design.name}
                       </h3>
 
-                      <div className="flex items-center text-sm text-gray-500 mb-1">
+                      <div className="flex items-center text-sm text-gray-500 dark:text-navy-400 mb-1">
                         <Ruler className="h-4 w-4 mr-1.5" />
                         <span>
                           {size.name} ({size.truckBed})
                         </span>
                       </div>
 
-                      <div className="flex items-center text-sm text-gray-500 mb-4">
+                      <div className="flex items-center text-sm text-gray-500 dark:text-navy-400 mb-4">
                         <Calendar className="h-4 w-4 mr-1.5" />
                         <span>
                           {design.updatedAt
@@ -169,7 +169,7 @@ const MyDesigns = () => {
                         </Button>
                         <button
                           onClick={() => handleDeleteClick(design)}
-                          className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                          className="p-2 text-gray-400 hover:text-red-500 dark:text-navy-500 dark:hover:text-red-400 transition-colors"
                           title="Delete"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -192,8 +192,8 @@ const MyDesigns = () => {
         size="sm"
       >
         <div className="space-y-4">
-          <p className="text-gray-600">
-            Are you sure you want to delete "{designToDelete?.name}"? This action
+          <p className="text-gray-600 dark:text-navy-300">
+            Are you sure you want to delete &quot;{designToDelete?.name}&quot;? This action
             cannot be undone.
           </p>
           <div className="flex justify-end gap-3">
