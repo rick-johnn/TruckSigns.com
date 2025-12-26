@@ -11,7 +11,8 @@
       "Bash(gh repo create:*)",
       "Bash(npm view:*)",
       "Bash(npm search:*)",
-      "Bash(npm run lint:*)"
+      "Bash(npm run lint:*)",
+      "Bash(cat:*)"
     ]
   }
 }

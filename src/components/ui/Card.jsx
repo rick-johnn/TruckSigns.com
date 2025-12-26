@@ -3,6 +3,7 @@ const Card = ({
   className = '',
   padding = 'md',
   hover = false,
+  elevated = false,
   onClick,
 }) => {
   const paddings = {
@@ -13,9 +14,14 @@ const Card = ({
   };
 
   const baseStyles = `
-    bg-white rounded-xl shadow-sm border border-gray-100
+    bg-white dark:bg-navy-900 rounded-xl border border-gray-100 dark:border-navy-800
+    ${elevated ? 'shadow-soft-lg dark:shadow-dark-lg' : 'shadow-soft dark:shadow-dark-soft'}
     ${paddings[padding]}
-    ${hover ? 'transition-all duration-200 hover:shadow-md hover:border-gray-200' : ''}
+    ${hover ? `
+      transition-all duration-300 ease-out-expo cursor-pointer
+      hover:shadow-soft-xl dark:hover:shadow-dark-lg hover:-translate-y-1
+      hover:border-gray-200 dark:hover:border-navy-700
+    ` : 'transition-colors duration-300'}
     ${onClick ? 'cursor-pointer' : ''}
     ${className}
   `;
@@ -32,11 +38,15 @@ export const CardHeader = ({ children, className = '' }) => (
 );
 
 export const CardTitle = ({ children, className = '' }) => (
-  <h3 className={`text-xl font-bold text-gray-900 ${className}`}>{children}</h3>
+  <h3 className={`text-xl font-bold text-gray-900 dark:text-white tracking-tight ${className}`}>
+    {children}
+  </h3>
 );
 
 export const CardDescription = ({ children, className = '' }) => (
-  <p className={`text-gray-600 mt-1 ${className}`}>{children}</p>
+  <p className={`text-gray-600 dark:text-navy-400 mt-1 text-sm leading-relaxed ${className}`}>
+    {children}
+  </p>
 );
 
 export const CardContent = ({ children, className = '' }) => (
@@ -44,7 +54,7 @@ export const CardContent = ({ children, className = '' }) => (
 );
 
 export const CardFooter = ({ children, className = '' }) => (
-  <div className={`mt-4 pt-4 border-t border-gray-100 ${className}`}>
+  <div className={`mt-4 pt-4 border-t border-gray-100 dark:border-navy-800 ${className}`}>
     {children}
   </div>
 );

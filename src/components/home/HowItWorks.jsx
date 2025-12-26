@@ -28,43 +28,44 @@ const steps = [
 
 const HowItWorks = () => {
   return (
-    <section className="py-20 lg:py-28 bg-white">
+    <section className="py-20 lg:py-28 bg-white dark:bg-navy-900 transition-colors duration-300">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">
+          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white tracking-tight">
             How It <span className="text-usa-red">Works</span>
           </h2>
-          <p className="mt-4 text-lg text-gray-600">
+          <p className="mt-4 text-lg text-gray-600 dark:text-navy-300 leading-relaxed">
             Getting your custom truck sign is simple. Three easy steps to turn
             your truck into a mobile billboard.
           </p>
         </div>
 
         <div className="relative">
-          {/* Connection Line (Desktop) */}
-          <div className="hidden lg:block absolute top-24 left-1/6 right-1/6 h-0.5 bg-gray-200">
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-2 h-2 bg-usa-red rounded-full" />
-            <div className="absolute left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 w-2 h-2 bg-usa-red rounded-full" />
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 bg-usa-red rounded-full" />
+          {/* Connection Line (Desktop) - refined with gradient */}
+          <div className="hidden lg:block absolute top-24 left-[16.67%] right-[16.67%] h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-navy-700 to-transparent">
+            {/* Animated dots on the line */}
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-usa-red rounded-full shadow-glow-red" />
+            <div className="absolute left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-usa-red rounded-full shadow-glow-red" />
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-usa-red rounded-full shadow-glow-red" />
           </div>
 
           <div className="grid lg:grid-cols-3 gap-8 lg:gap-12">
             {steps.map((step, index) => (
-              <div key={index} className="relative text-center">
-                {/* Step Number */}
-                <div className="inline-flex items-center justify-center w-20 h-20 bg-navy rounded-2xl mb-6 shadow-lg">
-                  <step.icon className="h-10 w-10 text-white" />
+              <div key={index} className="relative text-center group">
+                {/* Step Icon Container - refined with hover effects */}
+                <div className="relative inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-navy to-navy-800 dark:from-navy-700 dark:to-navy-800 rounded-2xl mb-6 shadow-soft-lg transition-all duration-300 group-hover:shadow-glow-navy group-hover:scale-105">
+                  <step.icon className="h-9 w-9 text-white transition-transform duration-300 group-hover:scale-110" />
                 </div>
 
-                {/* Number Badge */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 bg-usa-red text-white text-sm font-bold px-3 py-1 rounded-full">
+                {/* Number Badge - refined positioning and styling */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1 bg-gradient-to-r from-usa-red to-usa-red-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-soft">
                   {step.number}
                 </div>
 
-                <h3 className="text-xl font-bold text-gray-900 mb-3">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 tracking-tight">
                   {step.title}
                 </h3>
-                <p className="text-gray-600 max-w-sm mx-auto">
+                <p className="text-gray-600 dark:text-navy-400 max-w-sm mx-auto text-sm leading-relaxed">
                   {step.description}
                 </p>
               </div>
@@ -72,9 +73,9 @@ const HowItWorks = () => {
           </div>
         </div>
 
-        {/* CTA */}
+        {/* CTA - refined styling */}
         <div className="mt-16 text-center">
-          <div className="inline-flex items-center space-x-2 bg-green-50 text-green-700 px-4 py-2 rounded-full mb-6">
+          <div className="inline-flex items-center space-x-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 px-4 py-2 rounded-full mb-6 border border-emerald-100 dark:border-emerald-800/30">
             <Check className="h-5 w-5" />
             <span className="text-sm font-medium">Free to design, no obligation</span>
           </div>
