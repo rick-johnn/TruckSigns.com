@@ -95,46 +95,26 @@ const Hero = () => {
             </div>
           </div>
 
-          {/* Visual - refined with depth and polish */}
+          {/* Visual - Product showcase with real photo */}
           <div
             className="relative hidden lg:block opacity-0 animate-fade-in"
             style={{ animationDelay: '0.3s', animationFillMode: 'forwards' }}
           >
-            <div className="relative bg-gradient-to-br from-navy-700/80 to-navy-900/90 backdrop-blur-sm rounded-2xl p-8 shadow-soft-xl border border-white/5">
-              {/* Truck Illustration */}
-              <div className="aspect-[4/3] bg-gradient-to-b from-navy-800 to-navy-900 rounded-xl overflow-hidden relative">
-                {/* Simple Truck Representation */}
-                <div className="absolute inset-0 flex items-end justify-center pb-8">
-                  {/* Truck Bed */}
-                  <div className="relative w-3/4">
-                    {/* Sign on top - with subtle glow */}
-                    <div className="bg-gradient-to-r from-usa-red-600 to-usa-red h-16 rounded-t-lg flex items-center justify-center mb-1 shadow-glow-red">
-                      <div className="text-white text-center">
-                        <div className="text-lg font-bold tracking-wide">YOUR BUSINESS</div>
-                        <div className="text-xs opacity-90">(555) 123-4567</div>
-                      </div>
-                    </div>
-                    {/* Truck cab */}
-                    <div className="flex">
-                      <div className="bg-navy-600 w-1/3 h-12 rounded-l-lg shadow-inner" />
-                      <div className="bg-navy-500 w-2/3 h-12 rounded-r-lg shadow-inner" />
-                    </div>
-                    {/* Wheels */}
-                    <div className="flex justify-between mt-1 px-4">
-                      <div className="w-8 h-8 bg-navy-950 rounded-full border-4 border-navy-700 shadow-inner" />
-                      <div className="w-8 h-8 bg-navy-950 rounded-full border-4 border-navy-700 shadow-inner" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Road */}
-                <div className="absolute bottom-0 left-0 right-0 h-8 bg-navy-800">
-                  <div className="h-0.5 bg-amber-400/60 mt-3.5 mx-4 rounded-full" />
-                </div>
+            {/* Main product image container */}
+            <div className="relative">
+              {/* Product photo */}
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-white/10">
+                <img
+                  src="/images/truck-sign-placeholder.png"
+                  alt="Blue pickup truck with custom advertising sign mounted on truck bed"
+                  className="w-full h-auto object-cover"
+                />
+                {/* Subtle overlay gradient for better text contrast if needed */}
+                <div className="absolute inset-0 bg-gradient-to-t from-navy-900/20 via-transparent to-transparent" />
               </div>
 
-              {/* Feature callouts - refined with better hover states */}
-              <div className="mt-6 grid grid-cols-3 gap-3 text-center">
+              {/* Feature badges overlaid on image */}
+              <div className="absolute -bottom-4 left-4 right-4 flex justify-center gap-3">
                 {[
                   { icon: Truck, label: 'Cab Height' },
                   { value: 'AL', label: 'Aluminum' },
@@ -142,26 +122,22 @@ const Hero = () => {
                 ].map((item, index) => (
                   <div
                     key={index}
-                    className="bg-white/5 hover:bg-white/10 rounded-lg p-3 transition-all duration-300 border border-white/5 hover:border-white/10 cursor-default"
+                    className="bg-white dark:bg-navy-800 rounded-xl px-4 py-3 shadow-soft-lg border border-gray-100 dark:border-navy-700 text-center min-w-[90px]"
                   >
                     {item.icon ? (
-                      <item.icon className="h-6 w-6 text-usa-red mx-auto mb-2" />
+                      <item.icon className="h-5 w-5 text-usa-red mx-auto mb-1" />
                     ) : (
-                      <div className="text-usa-red text-lg font-bold mb-1">{item.value}</div>
+                      <div className="text-usa-red text-base font-bold">{item.value}</div>
                     )}
-                    <span className="text-white/80 text-xs font-medium">{item.label}</span>
+                    <span className="text-gray-600 dark:text-navy-300 text-xs font-medium">{item.label}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Floating badge - refined with animation */}
-            <div className="absolute -top-3 -right-3 bg-gradient-to-r from-usa-red to-usa-red-600 text-white px-4 py-2 rounded-full shadow-glow-red animate-float">
-              <span className="text-sm font-bold tracking-wide">Contact for Quote</span>
-            </div>
-
-            {/* Decorative element */}
-            <div className="absolute -bottom-4 -left-4 w-24 h-24 bg-usa-red/10 rounded-full blur-2xl" />
+            {/* Decorative elements */}
+            <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-usa-red/10 rounded-full blur-3xl" />
+            <div className="absolute -top-4 -right-4 w-24 h-24 bg-navy-400/10 rounded-full blur-2xl" />
           </div>
         </div>
       </div>

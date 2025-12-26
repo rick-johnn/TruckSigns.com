@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import * as fabric from 'fabric';
 import { Layout } from '../components/layout';
@@ -39,27 +39,75 @@ const DesignTool = () => {
   const [designPreview, setDesignPreview] = useState(null);
   const [canvasDimensions, setCanvasDimensions] = useState({ width: 800, height: 291 });
 
-  // Initialize or load design
-  useEffect(() => {
-    if (designId) {
-      const loaded = loadDesign(designId);
-      if (loaded && canvas && loaded.canvasData) {
-        canvas.loadFromJSON(loaded.canvasData, () => {
-          canvas.renderAll();
-        });
-      }
-    } else if (!currentDesign) {
-      createNewDesign(SIGN_SIZES.medium);
-    }
-  }, [designId, loadDesign, createNewDesign, currentDesign, canvas]);
+  // Track which design ID has been loaded to prevent re-loading
+  const loadedDesignIdRef = useRef(null);
+  const canvasLoadedForDesignRef = useRef(null);
+  const currentDesignRef = useRef(currentDesign);
 
-  // Canvas ready callback
+  // Keep currentDesignRef up to date
+  useEffect(() => {
+    currentDesignRef.current = currentDesign;
+  }, [currentDesign]);
+
+  // Initialize or load design when designId changes
+  useEffect(() => {
+    // If we have a designId and it's different from what we've loaded
+    if (designId) {
+      if (loadedDesignIdRef.current !== designId) {
+        loadedDesignIdRef.current = designId;
+        canvasLoadedForDesignRef.current = null; // Reset canvas loaded flag for new design
+        loadDesign(designId);
+      }
+    } else {
+      // No designId - create new design if needed
+      if (loadedDesignIdRef.current !== 'new') {
+        loadedDesignIdRef.current = 'new';
+        canvasLoadedForDesignRef.current = null;
+        createNewDesign(SIGN_SIZES.medium);
+      }
+    }
+  }, [designId, loadDesign, createNewDesign]);
+
+  // Load canvas data when canvas is ready and we have design data
+  useEffect(() => {
+    if (!canvas || !currentDesign?.canvasData) return;
+
+    const designIdToLoad = currentDesign.id;
+    if (canvasLoadedForDesignRef.current !== designIdToLoad) {
+      canvasLoadedForDesignRef.current = designIdToLoad;
+      // Clear existing objects before loading
+      canvas.clear();
+      canvas.loadFromJSON(currentDesign.canvasData, () => {
+        // Force multiple render passes to ensure objects are visible
+        canvas.requestRenderAll();
+        // Also schedule another render after a brief delay
+        setTimeout(() => {
+          canvas.renderAll();
+        }, 100);
+      });
+    }
+  }, [canvas, currentDesign]);
+
+  // Canvas ready callback - uses ref to get latest currentDesign
   const handleCanvasReady = useCallback((fabricCanvas) => {
     setCanvas(fabricCanvas);
     setCanvasDimensions({
       width: fabricCanvas.width,
       height: fabricCanvas.height,
     });
+
+    // Use ref to get latest design data (callback may have stale closure)
+    const design = currentDesignRef.current;
+    if (design?.canvasData && canvasLoadedForDesignRef.current !== design.id) {
+      canvasLoadedForDesignRef.current = design.id;
+      fabricCanvas.clear();
+      fabricCanvas.loadFromJSON(design.canvasData, () => {
+        fabricCanvas.requestRenderAll();
+        setTimeout(() => {
+          fabricCanvas.renderAll();
+        }, 100);
+      });
+    }
   }, []);
 
   // Object selection

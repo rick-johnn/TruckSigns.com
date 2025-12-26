@@ -41,12 +41,10 @@ const HowItWorks = () => {
         </div>
 
         <div className="relative">
-          {/* Connection Line (Desktop) - refined with gradient */}
-          <div className="hidden lg:block absolute top-24 left-[16.67%] right-[16.67%] h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-navy-700 to-transparent">
-            {/* Animated dots on the line */}
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-usa-red rounded-full shadow-glow-red" />
-            <div className="absolute left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-usa-red rounded-full shadow-glow-red" />
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-usa-red rounded-full shadow-glow-red" />
+          {/* Connection Line (Desktop) - spans full width behind icons */}
+          <div className="hidden lg:block absolute top-24 left-0 right-0 h-px">
+            {/* The actual line between the first and last dot */}
+            <div className="absolute left-[16.67%] right-[16.67%] top-0 h-px bg-gradient-to-r from-gray-200 via-gray-200 dark:via-navy-700 to-gray-200 dark:to-navy-700" />
           </div>
 
           <div className="grid lg:grid-cols-3 gap-8 lg:gap-12">
@@ -57,12 +55,15 @@ const HowItWorks = () => {
                   <step.icon className="h-9 w-9 text-white transition-transform duration-300 group-hover:scale-110" />
                 </div>
 
+                {/* Red dot indicator - centered under icon */}
+                <div className="hidden lg:block absolute top-[6.5rem] left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-usa-red rounded-full shadow-glow-red" />
+
                 {/* Number Badge - refined positioning and styling */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1 bg-gradient-to-r from-usa-red to-usa-red-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-soft">
                   {step.number}
                 </div>
 
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 tracking-tight">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 tracking-tight lg:mt-6">
                   {step.title}
                 </h3>
                 <p className="text-gray-600 dark:text-navy-400 max-w-sm mx-auto text-sm leading-relaxed">

@@ -26,18 +26,21 @@ const ProductPreview = () => {
               className={`
                 group relative bg-white dark:bg-navy-900 rounded-2xl shadow-soft dark:shadow-dark-soft overflow-hidden
                 transition-all duration-300 ease-out-expo hover:shadow-soft-xl dark:hover:shadow-dark-lg hover:-translate-y-1
+                border-2
                 ${size.popular
-                  ? 'border-2 border-usa-red ring-4 ring-usa-red/10'
-                  : 'border border-gray-100 dark:border-navy-800 hover:border-gray-200 dark:hover:border-navy-700'
+                  ? 'border-usa-red ring-4 ring-usa-red/10'
+                  : 'border-gray-100 dark:border-navy-800 hover:border-gray-200 dark:hover:border-navy-700'
                 }
               `}
               style={{ animationDelay: `${index * 0.1}s` }}
             >
-              {/* Popular Badge - refined with gradient */}
-              {size.popular && (
-                <div className="absolute top-0 right-0 bg-gradient-to-r from-usa-red to-usa-red-600 text-white px-4 py-1.5 text-xs font-bold tracking-wide rounded-bl-xl shadow-soft z-10">
+              {/* Popular Badge - as top banner for consistent spacing */}
+              {size.popular ? (
+                <div className="bg-gradient-to-r from-usa-red to-usa-red-600 text-white text-center py-2 text-xs font-bold tracking-wide">
                   Most Popular
                 </div>
+              ) : (
+                <div className="h-0" />
               )}
 
               {/* Sign Visual - refined with better gradients */}
