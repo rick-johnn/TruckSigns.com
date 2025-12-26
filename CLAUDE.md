@@ -58,6 +58,28 @@ canvas.requestRenderAll();
 - `npm run build` - Production build
 - `npm run lint` - ESLint check
 
+## Planned Architecture (Future Work)
+
+The current implementation uses localStorage for authentication and design persistence. This will be replaced with a server-side backend. See `docs/backend-architecture-security-analysis.md` for the full architectural plan.
+
+**Key changes planned:**
+
+- **Hosting**: Azure Container Apps (consumption tier)
+- **Database**: Azure SQL Serverless (replaces localStorage)
+- **Authentication**: JWT-based with bcrypt password hashing (replaces plain-text localStorage)
+- **Design Storage**: Server-side persistence enabling multi-device access
+
+**Files that will change:**
+
+- `src/utils/storage.js` - Replace localStorage with API calls
+- `src/context/AuthContext.jsx` - Use JWT authentication
+- `src/context/DesignContext.jsx` - Fetch/save designs via API
+
+**New backend files (to be created):**
+
+- `api/` - Node.js API with auth, designs, and email endpoints
+- Database schema in `docs/backend-architecture-security-analysis.md` Section 2.1
+
 ## Docker
 
 ### Production Build
